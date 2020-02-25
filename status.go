@@ -38,6 +38,14 @@ func Convert(err error) *status.Status {
 // Postgres: https://www.postgresql.org/docs/current/static/errcodes-appendix.html
 // GRPC:     https://godoc.org/google.golang.org/grpc/codes
 func Code(err error) codes.Code {
+	if err == nil {
+		return codes.OK
+	}
+
+	if se, ok := status.FromError(err); ok {
+		return se.Code()
+	}
+
 	se, ok := err.(interface{ SQLState() string })
 	if !ok {
 		return codes.Unknown

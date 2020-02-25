@@ -37,3 +37,23 @@ func TestConvert(t *testing.T) {
 		}
 	}
 }
+
+func TestCode(t *testing.T) {
+	testCases := []struct {
+		in   error
+		want codes.Code
+	}{
+		{in: nil, want: codes.OK},
+		{in: status.New(codes.DeadlineExceeded, "deadline exceeded").Err(), want: codes.DeadlineExceeded},
+		{in: pgerror("00000"), want: codes.OK},
+		{in: pgerror("0100C"), want: codes.OK},
+		{in: pgerror("03000"), want: codes.Unavailable},
+		{in: pgerror("23505"), want: codes.AlreadyExists},
+	}
+	for _, tc := range testCases {
+		got := pgstatus.Code(tc.in)
+		if got != tc.want {
+			t.Errorf("FromContextError(%v) = %v; want %v", tc.in, got, tc.want)
+		}
+	}
+}

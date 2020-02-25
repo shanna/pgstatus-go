@@ -1,3 +1,5 @@
+[![](https://godoc.org/github.com/shanna/pgstatus-go?status.svg)](https://godoc.org/github.com/shanna/pgstatus-go)
+
 # pgstatus-go
 
 Postgres error to gRPC status.
