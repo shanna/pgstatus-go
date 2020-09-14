@@ -2,6 +2,7 @@
 package pgstatus
 
 import (
+	"database/sql"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -14,6 +15,10 @@ import (
 func FromError(err error) (*status.Status, bool) {
 	if err == nil {
 		return nil, true
+	}
+
+	if err == sql.ErrNoRows {
+		return status.New(codes.NotFound, err.Error()), true
 	}
 
 	if se, ok := status.FromError(err); ok {
@@ -40,6 +45,10 @@ func Convert(err error) *status.Status {
 func Code(err error) codes.Code {
 	if err == nil {
 		return codes.OK
+	}
+
+	if err == sql.ErrNoRows {
+		return codes.NotFound
 	}
 
 	if se, ok := status.FromError(err); ok {
