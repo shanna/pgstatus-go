@@ -263,3 +263,18 @@ var conditions = map[string]string{
 	"XX001": "data_corrupted",
 	"XX002": "index_corrupted",
 }
+
+// ConditionName for SQLStatus() interface error code.
+func ConditionName(err error) (string, bool) {
+	s, ok := err.(SQLState)
+	if !ok {
+		return "", false
+	}
+
+	c, ok := conditions[s.SQLState()]
+	if !ok {
+		return "", false
+	}
+
+	return c, true
+}

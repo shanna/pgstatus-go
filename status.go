@@ -10,8 +10,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// SQLState error code interface.
+type SQLState interface {
+	SQLState() string
+}
+
 // FromError returns a gRPC status.Status representing an err if it was produced from status package, has a method
-// `GRPCStatus() *status.Status` or has a method `SQLState() string` returning a postgres error code.
+// `GRPCStatus() *status.Status` or has a method SQLState interface returning a postgres error code.
 // Otherwise, ok is false and a Status is returned with codes.Unknown and the original error message.
 func FromError(err error) (*status.Status, bool) {
 	if err == nil {
@@ -26,8 +31,8 @@ func FromError(err error) (*status.Status, bool) {
 		return se, true
 	}
 
-	if state, ok := err.(interface{ SQLState() string }); ok {
-		return status.New(Code(err), fmt.Sprintf("%s: %s", conditions[state.SQLState()], err.Error())), true
+	if condition, ok := ConditionName(err); ok {
+		return status.New(Code(err), fmt.Sprintf("%s: %s", condition, err.Error())), true
 	}
 
 	return status.New(codes.Unknown, err.Error()), false
@@ -56,7 +61,7 @@ func Code(err error) codes.Code {
 		return se.Code()
 	}
 
-	se, ok := err.(interface{ SQLState() string })
+	se, ok := err.(SQLState)
 	if !ok {
 		return codes.Unknown
 	}
