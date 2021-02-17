@@ -3,6 +3,7 @@ package pgstatus
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -25,8 +26,8 @@ func FromError(err error) (*status.Status, bool) {
 		return se, true
 	}
 
-	if _, ok := err.(interface{ SQLState() string }); ok {
-		return status.New(Code(err), err.Error()), true
+	if state, ok := err.(interface{ SQLState() string }); ok {
+		return status.New(Code(err), fmt.Sprintf("%s: %s", conditions[state.SQLState()], err.Error())), true
 	}
 
 	return status.New(codes.Unknown, err.Error()), false
@@ -60,8 +61,7 @@ func Code(err error) codes.Code {
 		return codes.Unknown
 	}
 
-	// Changes to gRPC codes accompanied by reasoned opinions codes will probably be accepted as this entire package
-	// exists mostly for idempotent mutation attempts that violate uniqueness constraints, not found and not complete.
+	// Pull request for postgres to gRPC code changes accompanied by reasoned opinions will probably be accepted.
 	code := se.SQLState()
 	switch {
 	// cool
